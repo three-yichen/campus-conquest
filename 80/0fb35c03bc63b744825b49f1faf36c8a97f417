@@ -1,0 +1,21 @@
+main.js
+  s_770296288c5cc6::t_1d9f46a81490ef 5,8-11,18-19,24-25,27,30,52-55,57,64,68,72,76
+README.md
+  s_770296288c5cc6::t_1d9f46a81490ef 5-10,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "800fb35c03bc63b744825b49f1faf36c8a97f417",
+  "prompts": {},
+  "sessions": {
+    "s_770296288c5cc6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee026-74ff-77a2-b673-e841466ec3ca",
+        "model": "gpt-5.4"
+      },
+      "human_author": "three-yichen <happywyc006@163.com>"
+    }
+  }
+}
