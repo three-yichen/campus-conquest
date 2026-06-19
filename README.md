@@ -9,6 +9,7 @@
 - 自动计算当前总分、最大总分、制霸率和称号
 - 顶部结果区域适合截图分享
 - 支持复制分享文案
+- 支持下载分享图 PNG
 - 支持重置所有选择
 - 使用 localStorage 自动保存进度，刷新后仍会保留
 
@@ -45,6 +46,38 @@ python3 -m http.server 8000
 http://localhost:8000
 ```
 
+## 下载分享图
+
+页面会把 `.share-poster` 分享卡片导出为 `campus-conquest-report.png`。
+
+项目默认通过本地文件方式引入 `html2canvas`，不使用 CDN。当前仓库中的脚本路径为：
+
+```text
+vendor/html2canvas.min.js
+```
+
+如果你需要手动补这个文件，可以：
+
+1. 从 `https://html2canvas.hertzen.com/dist/html2canvas.min.js` 下载文件。
+2. 在项目根目录创建 `vendor/` 文件夹。
+3. 将文件保存为 `vendor/html2canvas.min.js`。
+4. 保持 `index.html` 中的这行脚本引用不变：
+
+```html
+<script src="vendor/html2canvas.min.js"></script>
+```
+
+使用方式：
+
+1. 打开页面后填写你的大学生活等级。
+2. 点击“下载分享图”按钮。
+3. 浏览器会自动下载 `campus-conquest-report.png`。
+
+降级说明：
+
+- 如果本地 `html2canvas.min.js` 缺失，页面会提示你改用长按或截图保存分享卡片。
+- 如果浏览器阻止下载或生成失败，页面也会给出明确失败提示，不会无响应。
+
 ## 文件结构
 
 ```text
@@ -52,6 +85,7 @@ index.html
 style.css
 main.js
 README.md
+vendor/html2canvas.min.js
 ```
 
 ## 技术说明
@@ -67,7 +101,6 @@ README.md
 ## 后续计划
 
 - 增加自定义项目
-- 增加结果卡片导出为图片
 - 增加不同主题配色
 - 增加更多校园生活分类
 

@@ -65,6 +65,7 @@ const DOMINATED_LEVEL = 3;
 const MAX_DOMINATED_ITEMS = 8;
 const MAX_PERSONALITY_TAGS = 3;
 const EMPTY_DOMINATED_TEXT = "还在新手村探索中";
+const SHARE_IMAGE_FILE_NAME = "campus-conquest-report.png";
 const MAX_LEVEL = Math.max(...LEVELS.map((level) => level.value));
 const MAX_SCORE = ITEMS.length * MAX_LEVEL;
 
@@ -323,6 +324,45 @@ function copyShareTextFallback(text, successMessage, failureMessage) {
   window.prompt("请手动复制：", text);
 }
 
+function downloadShareImage() {
+  const sharePoster = document.querySelector(".share-poster");
+
+  if (!sharePoster) {
+    setCopyStatus("未找到分享卡片，暂时无法导出图片。");
+    return;
+  }
+
+  if (typeof window.html2canvas !== "function") {
+    setCopyStatus("本地 html2canvas 未加载，请放置 vendor/html2canvas.min.js；当前可长按或截图保存分享卡片。");
+    return;
+  }
+
+  setCopyStatus("正在生成分享图...");
+
+  window.html2canvas(sharePoster, {
+    backgroundColor: null,
+    scale: Math.max(window.devicePixelRatio || 1, 2),
+    useCORS: false
+  })
+    .then((canvas) => {
+      try {
+        const imageDataUrl = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageDataUrl;
+        downloadLink.download = SHARE_IMAGE_FILE_NAME;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        setCopyStatus(`已下载分享图：${SHARE_IMAGE_FILE_NAME}`);
+      } catch (error) {
+        setCopyStatus("下载失败，请长按或截图保存分享卡片。");
+      }
+    })
+    .catch(() => {
+      setCopyStatus("生成分享图失败，请长按或截图保存分享卡片。");
+    });
+}
+
 function getLevelByValue(value) {
   return LEVELS.find((level) => level.value === value) || LEVELS[0];
 }
@@ -373,4 +413,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("resetButton").addEventListener("click", resetState);
   document.getElementById("copyButton").addEventListener("click", copyShareText);
+  document.getElementById("downloadButton").addEventListener("click", downloadShareImage);
 });
