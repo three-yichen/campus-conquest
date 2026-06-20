@@ -60,24 +60,32 @@ const TAG_RULES = [
 
 const MAP_AREAS = [
   {
-    name: "新手村",
-    items: ["军训", "早八", "食堂高峰排队", "抢课失败", "抢课成功"]
+    name: "校门广场",
+    items: ["军训", "早八", "抢课失败", "抢课成功"]
   },
   {
-    name: "主线副本",
-    items: ["图书馆自习", "小组作业背锅", "凌晨赶 ddl", "期末周极限求生", "绩点焦虑发作", "论文格式大战", "课堂展示硬撑", "答辩"]
+    name: "教学楼",
+    items: ["课堂展示硬撑", "期末周极限求生", "小组作业背锅", "答辩", "凌晨赶 ddl"]
   },
   {
-    name: "支线副本",
-    items: ["社团活动", "学生会/组织工作", "讲座签到速通", "参加竞赛", "奖学金申请"]
+    name: "图书馆",
+    items: ["图书馆自习", "论文格式大战", "绩点焦虑发作", "考研/保研焦虑"]
   },
   {
-    name: "生存副本",
-    items: ["校医院开药", "体测渡劫", "打印店赛博救命", "校园卡丢失", "外卖进校"]
+    name: "食堂生活区",
+    items: ["食堂高峰排队", "外卖进校", "打印店赛博救命", "校园卡丢失"]
   },
   {
-    name: "青春副本",
-    items: ["逃课", "宿舍夜聊", "校园恋爱", "操场散步", "实习", "考研/保研焦虑", "毕业照"]
+    name: "宿舍区",
+    items: ["宿舍夜聊", "逃课", "校园恋爱"]
+  },
+  {
+    name: "操场与远方",
+    items: ["体测渡劫", "操场散步", "实习", "参加竞赛", "毕业照"]
+  },
+  {
+    name: "组织与支线",
+    items: ["社团活动", "学生会/组织工作", "奖学金申请", "讲座签到速通", "校医院开药"]
   }
 ];
 
@@ -91,8 +99,20 @@ const EMPTY_DOMINATED_TEXT = "还在新手村探索中";
 const SHARE_IMAGE_FILE_NAME = "campus-conquest-report.png";
 const MAX_LEVEL = Math.max(...LEVELS.map((level) => level.value));
 const MAX_SCORE = ITEMS.length * MAX_LEVEL;
+const ITEM_INDEX_MAP = ITEMS.reduce((map, item, index) => {
+  map[item] = index;
+  return map;
+}, {});
 
 let selectedLevels = Array(ITEMS.length).fill(0);
+
+function getItemIndex(item) {
+  return Object.prototype.hasOwnProperty.call(ITEM_INDEX_MAP, item) ? ITEM_INDEX_MAP[item] : -1;
+}
+
+function getLevelByValue(value) {
+  return LEVELS.find((level) => level.value === value) || LEVELS[0];
+}
 
 function renderItems() {
   const grid = document.getElementById("itemsGrid");
@@ -131,20 +151,6 @@ function renderItems() {
   }).join("");
 }
 
-function updateResult() {
-  const result = getCurrentResult();
-
-  document.getElementById("scoreValue").textContent = result.totalScore;
-  document.getElementById("maxScoreValue").textContent = MAX_SCORE;
-  document.getElementById("checkedValue").textContent = `${result.checkedCount}/${ITEMS.length}`;
-  document.getElementById("rateValue").textContent = `${result.rate}%`;
-  document.getElementById("titleValue").textContent = result.title;
-  document.getElementById("progressFill").style.width = `${result.rate}%`;
-  updateMapAreas();
-  updateShareCard();
-  updateShareMiniMap();
-}
-
 function getCurrentResult() {
   const totalScore = selectedLevels.reduce((sum, value) => sum + value, 0);
   const rate = MAX_SCORE === 0 ? 0 : Math.round((totalScore / MAX_SCORE) * 100);
@@ -167,7 +173,7 @@ function getTitleByRate(rate) {
 function getPersonalityTags() {
   return TAG_RULES.map((rule, index) => {
     const score = rule.items.reduce((sum, item) => {
-      const itemIndex = ITEMS.indexOf(item);
+      const itemIndex = getItemIndex(item);
       return sum + (itemIndex === -1 ? 0 : selectedLevels[itemIndex]);
     }, 0);
 
@@ -223,33 +229,8 @@ function getAreaStatus(rate) {
   return "已制霸";
 }
 
-function getAreaStats() {
-  return MAP_AREAS.map((area, index) => {
-    const totalScore = area.items.reduce((sum, item) => {
-      const itemIndex = ITEMS.indexOf(item);
-      return sum + (itemIndex === -1 ? 0 : selectedLevels[itemIndex]);
-    }, 0);
-    const maxScore = area.items.length * MAX_LEVEL;
-    const rate = maxScore === 0 ? 0 : Math.round((totalScore / maxScore) * 100);
-    const clearedCount = area.items.reduce((count, item) => {
-      const itemIndex = ITEMS.indexOf(item);
-      return count + (itemIndex !== -1 && selectedLevels[itemIndex] > 0 ? 1 : 0);
-    }, 0);
-
-    return {
-      ...area,
-      index,
-      totalScore,
-      maxScore,
-      rate,
-      clearedCount,
-      status: getAreaStatus(rate)
-    };
-  });
-}
-
-function getItemState(item) {
-  const itemIndex = ITEMS.indexOf(item);
+function getItemVisualState(item) {
+  const itemIndex = getItemIndex(item);
   const level = itemIndex === -1 ? 0 : selectedLevels[itemIndex];
 
   if (level <= 0) {
@@ -275,9 +256,39 @@ function getItemState(item) {
   };
 }
 
+function getAreaStats() {
+  return MAP_AREAS.map((area, index) => {
+    const totalScore = area.items.reduce((sum, item) => {
+      const itemIndex = getItemIndex(item);
+      return sum + (itemIndex === -1 ? 0 : selectedLevels[itemIndex]);
+    }, 0);
+    const maxScore = area.items.length * MAX_LEVEL;
+    const rate = maxScore === 0 ? 0 : Math.round((totalScore / maxScore) * 100);
+    const clearedCount = area.items.reduce((count, item) => {
+      const itemIndex = getItemIndex(item);
+      return count + (itemIndex !== -1 && selectedLevels[itemIndex] > 0 ? 1 : 0);
+    }, 0);
+    const summary = area.items.reduce((counts, item) => {
+      const itemState = getItemVisualState(item);
+      counts[itemState.state] += 1;
+      return counts;
+    }, { locked: 0, explored: 0, dominated: 0 });
+
+    return {
+      ...area,
+      index,
+      totalScore,
+      maxScore,
+      rate,
+      clearedCount,
+      status: getAreaStatus(rate),
+      summary
+    };
+  });
+}
+
 function getStrongestArea() {
-  const areaStats = getAreaStats();
-  const strongestArea = areaStats.reduce((bestArea, area) => {
+  const strongestArea = getAreaStats().reduce((bestArea, area) => {
     if (!bestArea) {
       return area;
     }
@@ -300,64 +311,88 @@ function getStrongestArea() {
   return strongestArea;
 }
 
-function renderMapAreas() {
+function getAreaNodeSummary(area) {
+  return `未点亮 ${area.summary.locked} · 已探索 ${area.summary.explored} · 已制霸 ${area.summary.dominated}`;
+}
+
+function renderAreaChips(items) {
+  return items.map((item) => {
+    const itemState = getItemVisualState(item);
+
+    return `
+      <li class="campus-chip campus-chip--${itemState.state}" title="${item} · ${itemState.label} · Lv.${itemState.level}">
+        <span class="campus-chip__dot" aria-hidden="true"></span>
+        <span class="campus-chip__name">${item}</span>
+      </li>
+    `;
+  }).join("");
+}
+
+function renderCampusMap() {
   const mapAreas = document.getElementById("mapAreas");
 
   if (!mapAreas) {
     return;
   }
 
-  mapAreas.innerHTML = getAreaStats().map((area) => {
-    const itemNodes = renderMapItemNodes(area.items);
-
-    return `
-      <article class="map-area-card map-area-card--${area.index + 1}" data-area-index="${area.index}" data-state="${area.status}">
-        <div class="map-area-card__path" aria-hidden="true">
-          <span class="map-area-card__step">${String(area.index + 1).padStart(2, "0")}</span>
-        </div>
-        <div class="map-area-card__head">
-          <div>
-            <p class="map-area-card__eyebrow">Campus Route ${area.index + 1}</p>
-            <h3>${area.name}</h3>
+  mapAreas.innerHTML = `
+    <div class="campus-map__paper" aria-hidden="true"></div>
+    <div class="campus-map__roads" aria-hidden="true">
+      <span class="campus-road campus-road--1"></span>
+      <span class="campus-road campus-road--2"></span>
+      <span class="campus-road campus-road--3"></span>
+      <span class="campus-road campus-road--4"></span>
+      <span class="campus-road campus-road--5"></span>
+      <span class="campus-road campus-road--6"></span>
+    </div>
+    ${getAreaStats().map((area) => {
+      return `
+        <article class="campus-zone campus-zone--${area.index + 1}" data-area-index="${area.index}" data-state="${area.status}">
+          <div class="campus-zone__badge">Campus ${area.index + 1}</div>
+          <div class="campus-zone__head">
+            <div>
+              <p class="campus-zone__eyebrow">大学生活区域</p>
+              <h3>${area.name}</h3>
+            </div>
+            <span class="campus-zone__status" id="campusZoneStatus${area.index}">${area.status}</span>
           </div>
-          <span class="map-area-card__status" id="mapAreaStatus${area.index}">${area.status}</span>
-        </div>
-        <dl class="map-area-card__meta">
-          <div>
-            <dt>区域完成率</dt>
-            <dd id="mapAreaRate${area.index}">${area.rate}%</dd>
+          <dl class="campus-zone__meta">
+            <div>
+              <dt>完成率</dt>
+              <dd id="campusZoneRate${area.index}">${area.rate}%</dd>
+            </div>
+            <div>
+              <dt>点亮项目</dt>
+              <dd id="campusZoneChecked${area.index}">${area.clearedCount}/${area.items.length}</dd>
+            </div>
+          </dl>
+          <div class="campus-zone__progress" aria-hidden="true">
+            <div class="campus-zone__progress-fill" id="campusZoneProgress${area.index}" style="width: ${area.rate}%"></div>
           </div>
-          <div>
-            <dt>已激活项目</dt>
-            <dd id="mapAreaChecked${area.index}">${area.clearedCount}/${area.items.length}</dd>
+          <div class="campus-zone__summary">
+            <span>当前状态</span>
+            <span id="campusZoneSummary${area.index}">${getAreaNodeSummary(area)}</span>
           </div>
-        </dl>
-        <div class="map-area-card__progress" aria-hidden="true">
-          <div class="map-area-card__progress-fill" id="mapAreaProgress${area.index}" style="width: ${area.rate}%"></div>
-        </div>
-        <div class="map-area-card__items-meta">
-          <span>项目点亮</span>
-          <span id="mapAreaNodeSummary${area.index}">${getAreaNodeSummary(area)}</span>
-        </div>
-        <ul class="map-area-card__items" id="mapAreaItems${area.index}">
-          ${itemNodes}
-        </ul>
-      </article>
-    `;
-  }).join("");
+          <ul class="campus-zone__chips" id="campusZoneChips${area.index}">
+            ${renderAreaChips(area.items)}
+          </ul>
+        </article>
+      `;
+    }).join("")}
+  `;
 }
 
-function updateMapAreas() {
+function updateCampusMap() {
   getAreaStats().forEach((area) => {
-    const areaCard = document.querySelector(`.map-area-card[data-area-index="${area.index}"]`);
-    const rateElement = document.getElementById(`mapAreaRate${area.index}`);
-    const checkedElement = document.getElementById(`mapAreaChecked${area.index}`);
-    const statusElement = document.getElementById(`mapAreaStatus${area.index}`);
-    const progressElement = document.getElementById(`mapAreaProgress${area.index}`);
-    const itemsElement = document.getElementById(`mapAreaItems${area.index}`);
-    const summaryElement = document.getElementById(`mapAreaNodeSummary${area.index}`);
+    const areaCard = document.querySelector(`.campus-zone[data-area-index="${area.index}"]`);
+    const rateElement = document.getElementById(`campusZoneRate${area.index}`);
+    const checkedElement = document.getElementById(`campusZoneChecked${area.index}`);
+    const statusElement = document.getElementById(`campusZoneStatus${area.index}`);
+    const progressElement = document.getElementById(`campusZoneProgress${area.index}`);
+    const summaryElement = document.getElementById(`campusZoneSummary${area.index}`);
+    const chipsElement = document.getElementById(`campusZoneChips${area.index}`);
 
-    if (!areaCard || !rateElement || !checkedElement || !statusElement || !progressElement || !itemsElement || !summaryElement) {
+    if (!areaCard || !rateElement || !checkedElement || !statusElement || !progressElement || !summaryElement || !chipsElement) {
       return;
     }
 
@@ -367,7 +402,7 @@ function updateMapAreas() {
     statusElement.textContent = area.status;
     progressElement.style.width = `${area.rate}%`;
     summaryElement.textContent = getAreaNodeSummary(area);
-    itemsElement.innerHTML = renderMapItemNodes(area.items);
+    chipsElement.innerHTML = renderAreaChips(area.items);
   });
 }
 
@@ -423,31 +458,7 @@ function updateShareCard() {
     : "";
 }
 
-function renderMapItemNodes(items) {
-  return items.map((item) => {
-    const itemState = getItemState(item);
-
-    return `
-      <li class="map-item-node map-item-node--${itemState.state}" title="${item} · ${itemState.label} · Lv.${itemState.level}">
-        <span class="map-item-node__dot" aria-hidden="true"></span>
-        <span class="map-item-node__name">${item}</span>
-        <span class="map-item-node__level">Lv.${itemState.level}</span>
-      </li>
-    `;
-  }).join("");
-}
-
-function getAreaNodeSummary(area) {
-  const summary = area.items.reduce((counts, item) => {
-    const itemState = getItemState(item);
-    counts[itemState.state] += 1;
-    return counts;
-  }, { locked: 0, explored: 0, dominated: 0 });
-
-  return `未点亮 ${summary.locked} · 已探索 ${summary.explored} · 已制霸 ${summary.dominated}`;
-}
-
-function updateShareMiniMap() {
+function updateShareMiniCampusMap() {
   const shareMiniMap = document.getElementById("shareMiniMap");
 
   if (!shareMiniMap) {
@@ -456,28 +467,44 @@ function updateShareMiniMap() {
 
   const strongestArea = getStrongestArea();
 
-  shareMiniMap.innerHTML = getAreaStats().map((area) => {
-    const itemSummary = area.items.map((item) => {
-      const itemState = getItemState(item);
-      return `<span class="share-mini-map__item share-mini-map__item--${itemState.state}" aria-hidden="true"></span>`;
-    }).join("");
-    const isStrongest = strongestArea && strongestArea.name === area.name;
+  shareMiniMap.innerHTML = `
+    <div class="share-mini-map__roads" aria-hidden="true">
+      <span class="share-mini-map__road share-mini-map__road--1"></span>
+      <span class="share-mini-map__road share-mini-map__road--2"></span>
+      <span class="share-mini-map__road share-mini-map__road--3"></span>
+      <span class="share-mini-map__road share-mini-map__road--4"></span>
+    </div>
+    ${getAreaStats().map((area) => {
+      const isStrongest = strongestArea && strongestArea.name === area.name;
 
-    return `
-      <article class="share-mini-map__area share-mini-map__area--${area.index + 1}${isStrongest ? " is-strongest" : ""}" data-state="${area.status}">
-        <div class="share-mini-map__area-head">
-          <strong>${area.name}</strong>
-          <span>${area.rate}%</span>
-        </div>
-        <div class="share-mini-map__progress" aria-hidden="true">
-          <div class="share-mini-map__progress-fill" style="width: ${area.rate}%"></div>
-        </div>
-        <div class="share-mini-map__items" aria-label="${area.name}项目状态">
-          ${itemSummary}
-        </div>
-      </article>
-    `;
-  }).join("");
+      return `
+        <article class="share-mini-zone share-mini-zone--${area.index + 1}${isStrongest ? " is-strongest" : ""}" data-state="${area.status}">
+          <div class="share-mini-zone__head">
+            <strong>${area.name}</strong>
+            <span>${area.rate}%</span>
+          </div>
+          <p class="share-mini-zone__status">${area.status}</p>
+          <div class="share-mini-zone__progress" aria-hidden="true">
+            <div class="share-mini-zone__progress-fill" style="width: ${area.rate}%"></div>
+          </div>
+        </article>
+      `;
+    }).join("")}
+  `;
+}
+
+function updateResult() {
+  const result = getCurrentResult();
+
+  document.getElementById("scoreValue").textContent = result.totalScore;
+  document.getElementById("maxScoreValue").textContent = MAX_SCORE;
+  document.getElementById("checkedValue").textContent = `${result.checkedCount}/${ITEMS.length}`;
+  document.getElementById("rateValue").textContent = `${result.rate}%`;
+  document.getElementById("titleValue").textContent = result.title;
+  document.getElementById("progressFill").style.width = `${result.rate}%`;
+  updateCampusMap();
+  updateShareCard();
+  updateShareMiniCampusMap();
 }
 
 function saveState() {
@@ -526,7 +553,7 @@ function copyShareText() {
   const strongestAreaText = strongestArea
     ? `${strongestArea.name} ${strongestArea.rate}%`
     : "还在新手村入口";
-  const shareText = `我的大学生制霸率是 ${rate}，称号是「${title}」。\n我的大学人格：${getPersonalityTagsText()}\n最强副本：${strongestAreaText}\n已制霸项目：${getDominatedItemsText()}\n${FOOTER_TEXT}`;
+  const shareText = `我的大学生制霸率是 ${rate}，称号是「${title}」。\n我的大学人格：${getPersonalityTagsText()}\n最强区域：${strongestAreaText}\n已制霸项目：${getDominatedItemsText()}\n${FOOTER_TEXT}`;
 
   if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
     navigator.clipboard.writeText(shareText)
@@ -618,10 +645,6 @@ function downloadShareImage() {
     });
 }
 
-function getLevelByValue(value) {
-  return LEVELS.find((level) => level.value === value) || LEVELS[0];
-}
-
 function updateItemSelection(index, value) {
   selectedLevels[index] = value;
 
@@ -648,7 +671,7 @@ function setCopyStatus(message) {
 document.addEventListener("DOMContentLoaded", () => {
   selectedLevels = loadState();
   renderItems();
-  renderMapAreas();
+  renderCampusMap();
   updateResult();
 
   document.getElementById("itemsGrid").addEventListener("click", (event) => {
