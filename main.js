@@ -80,7 +80,7 @@ const MAP_AREAS = [
     items: ["宿舍夜聊", "逃课", "校园恋爱"]
   },
   {
-    name: "操场与远方",
+    name: "诗与远方",
     items: ["体测渡劫", "操场散步", "实习", "参加竞赛", "毕业照"]
   },
   {
@@ -98,7 +98,8 @@ const MAX_PERSONALITY_TAGS = 3;
 const EMPTY_DOMINATED_TEXT = "还在新手村探索中";
 const EMPTY_WEAKEST_AREA_TEXT = "还没正式开图";
 const SHARE_IMAGE_FILE_NAME = "campus-conquest-report.png";
-const SHARE_TITLE = "我的大学生制霸报告";
+const SHARE_TITLE = "大学生制霸";
+const COPY_SHARE_TITLE = "我的大学生制霸报告";
 const SHARE_SUBTITLE = "一张图看看我的大学副本进度。";
 const MAX_LEVEL = Math.max(...LEVELS.map((level) => level.value));
 const MAX_SCORE = ITEMS.length * MAX_LEVEL;
@@ -284,9 +285,9 @@ function renderItems() {
                 data-value="${level.value}"
                 aria-pressed="${isSelected}"
                 aria-label="${item}：${level.label}"
+                title="${item}：${level.label}"
               >
                 <span class="level-number">${level.value}</span>
-                <span class="level-label">${level.label}</span>
               </button>
             `;
           }).join("")}
@@ -337,12 +338,17 @@ function getPersonalityTags() {
 
 function getDominatedItemsText() {
   const dominatedItems = ITEMS.filter((_, index) => selectedLevels[index] >= DOMINATED_LEVEL);
+  const previewCount = 6;
 
   if (dominatedItems.length === 0) {
     return EMPTY_DOMINATED_TEXT;
   }
 
-  return dominatedItems.slice(0, 8).join("、") + (dominatedItems.length > 8 ? "……" : "");
+  if (dominatedItems.length > previewCount) {
+    return `${dominatedItems.slice(0, previewCount).join("、")} 等 ${dominatedItems.length} 项`;
+  }
+
+  return dominatedItems.join("、");
 }
 
 function getPersonalityTagsText() {
@@ -809,7 +815,7 @@ function copyShareText() {
   const weakestAreaText = weakestArea
     ? `${weakestArea.name} ${weakestArea.rate}%`
     : EMPTY_WEAKEST_AREA_TEXT;
-  const shareText = `${SHARE_TITLE}\n制霸率：${rate}\n称号：${title}\n人格标签：${getPersonalityTagsText()}\n最强副本：${strongestAreaText}\n待通关副本：${weakestAreaText}\n深度体验项目：${getDominatedItemsText()}\n今日皮肤：${currentTheme.name}\n${FOOTER_TEXT}`;
+  const shareText = `${COPY_SHARE_TITLE}\n制霸率：${rate}\n称号：${title}\n人格标签：${getPersonalityTagsText()}\n最强副本：${strongestAreaText}\n待通关副本：${weakestAreaText}\n深度体验项目：${getDominatedItemsText()}\n今日皮肤：${currentTheme.name}\n${FOOTER_TEXT}`;
 
   if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
     navigator.clipboard.writeText(shareText)
@@ -911,7 +917,7 @@ function createExportPoster() {
       </div>
       <div style="margin-bottom:20px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <h2 style="margin:0; font-size:20px; color:${exportTheme.ink};">迷你校园分区图</h2>
+          <h2 style="margin:0; font-size:20px; color:${exportTheme.ink};">大学生活版图</h2>
           <p style="margin:0; font-size:12px; color:${exportTheme.muted};">7 区进度总览</p>
         </div>
         <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;">
@@ -952,10 +958,9 @@ function createExportPoster() {
           <p style="margin:0; font-size:22px; line-height:1.3; color:${exportTheme.ink}; font-weight:700;">${escapeHtml(weakestAreaText)}</p>
         </div>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; padding:14px 16px; background:${exportTheme.tag}; border:1px solid ${exportTheme.muted};">
-        <span style="font-size:14px; color:${exportTheme.muted};">今日皮肤</span>
-        <strong style="font-size:18px; color:${exportTheme.ink};">${escapeHtml(exportTheme.themeName)}</strong>
-      </div>
+      <p style="margin:0 0 18px; font-size:12px; color:${exportTheme.muted}; text-align:right;">
+        今日皮肤：<span style="color:${exportTheme.ink}; font-weight:700;">${escapeHtml(exportTheme.themeName)}</span>
+      </p>
       <p style="margin:0; padding-top:16px; border-top:1px solid ${exportTheme.muted}; font-size:14px; color:${exportTheme.muted};">
         ${escapeHtml(FOOTER_TEXT)}
       </p>
