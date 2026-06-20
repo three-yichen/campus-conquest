@@ -1,0 +1,36 @@
+style.css
+  s_f80195af84b8a6::t_349677cdfcbc73 1147-1151,1176-1182,1185-1186,1209,1211,1215,1227-1228,1230-1231,1234-1236,1257
+  s_f80195af84b8a6::t_e776f98424f0b7 1454
+  s_f80195af84b8a6::t_d14f44fdc9d68c 450-468,542-544
+main.js
+  h_cb629e6554ccfd 83
+  s_f80195af84b8a6::t_5c368bc23599b5 101-102,818
+  s_f80195af84b8a6::t_069b3f3958a046 288,341,347-351,920,961-963
+index.html
+  s_f80195af84b8a6::t_5c368bc23599b5 77
+  s_f80195af84b8a6::t_95cc11fdfc68d5 65-68,94-98
+README.md
+  s_f80195af84b8a6::t_683be0671e219a 5-7,12
+  s_f80195af84b8a6::t_6d6a0a695194f3 8-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "2fe2ecc09c7ae1e94fa44db0b5755e1e7a92747b",
+  "prompts": {},
+  "humans": {
+    "h_cb629e6554ccfd": {
+      "author": "three-yichen <happywyc006@163.com>"
+    }
+  },
+  "sessions": {
+    "s_f80195af84b8a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee520-b4b2-7c40-b0d3-7f668e0c9d0f",
+        "model": "gpt-5.4"
+      },
+      "human_author": "three-yichen <happywyc006@163.com>"
+    }
+  }
+}
