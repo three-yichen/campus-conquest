@@ -104,6 +104,7 @@ const ITEM_INDEX_MAP = ITEMS.reduce((map, item, index) => {
 }, {});
 
 let selectedLevels = Array(ITEMS.length).fill(0);
+let expandedAreaName = null;
 
 function getItemIndex(item) {
   return Object.prototype.hasOwnProperty.call(ITEM_INDEX_MAP, item) ? ITEM_INDEX_MAP[item] : -1;
@@ -317,6 +318,24 @@ function getStrongestArea() {
   return strongestArea;
 }
 
+function getPreferredExpandedAreaName(areaStats) {
+  if (expandedAreaName === "") {
+    return "";
+  }
+
+  if (expandedAreaName && areaStats.some((area) => area.name === expandedAreaName)) {
+    return expandedAreaName;
+  }
+
+  const strongestArea = getStrongestArea();
+
+  if (strongestArea) {
+    return strongestArea.name;
+  }
+
+  return areaStats[0] ? areaStats[0].name : "";
+}
+
 function renderAreaChips(items) {
   return items.map((item) => {
     const itemState = getItemVisualState(item);
@@ -390,17 +409,28 @@ function renderAreaDetails() {
     return;
   }
 
+  const areaStats = getAreaStats();
+  const expandedName = getPreferredExpandedAreaName(areaStats);
+
   areaDetails.innerHTML = `
     <div class="section-head section-head--stacked area-details__head">
       <h3>区域详情</h3>
-      <p class="section-subtitle">分区图只看区域进度，具体项目放在下面展开看。</p>
+      <p class="section-subtitle">点击展开查看每个区域的具体项目。</p>
     </div>
     <div class="area-details__grid">
-      ${getAreaStats().map((area) => `
-        <details class="area-detail-card"${area.index === 0 ? " open" : ""}>
+      ${areaStats.map((area) => `
+        <details class="area-detail-card area-detail-card--${area.tone}" data-area-name="${area.name}"${area.name === expandedName ? " open" : ""}>
           <summary class="area-detail-card__summary">
-            <span class="area-detail-card__name">${area.name}</span>
-            <span class="area-detail-card__meta">${area.status} · ${area.rate}%</span>
+            <span class="area-detail-card__lead">
+              <span class="area-detail-card__dot" aria-hidden="true"></span>
+              <span class="area-detail-card__name">${area.name}</span>
+            </span>
+            <span class="area-detail-card__stats">
+              <span class="area-detail-card__status">${area.status}</span>
+              <span class="area-detail-card__count">${area.clearedCount}/${area.items.length}</span>
+              <span class="area-detail-card__rate">${area.rate}%</span>
+              <span class="area-detail-card__chevron" aria-hidden="true"></span>
+            </span>
           </summary>
           <ul class="area-detail-card__chips">
             ${renderAreaChips(area.items)}
@@ -409,6 +439,26 @@ function renderAreaDetails() {
       `).join("")}
     </div>
   `;
+
+  areaDetails.querySelectorAll(".area-detail-card").forEach((detail) => {
+    detail.addEventListener("toggle", () => {
+      if (detail.open) {
+        expandedAreaName = detail.dataset.areaName || "";
+
+        areaDetails.querySelectorAll(".area-detail-card[open]").forEach((openDetail) => {
+          if (openDetail !== detail) {
+            openDetail.open = false;
+          }
+        });
+
+        return;
+      }
+
+      if ((detail.dataset.areaName || "") === expandedAreaName) {
+        expandedAreaName = "";
+      }
+    });
+  });
 }
 
 function updateAreaDetails() {
@@ -516,6 +566,7 @@ function loadState() {
 
 function resetState() {
   selectedLevels = Array(ITEMS.length).fill(0);
+  expandedAreaName = null;
   renderItems();
   updateResult();
   saveState();
